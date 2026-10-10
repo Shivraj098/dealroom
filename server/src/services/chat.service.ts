@@ -2,8 +2,10 @@ import mongoose from 'mongoose'
 import { ChatMessage, type IChatMessage } from '../models/ChatMessage'
 import { DealRoom, type IDealRoom } from '../models/DealRoom'
 import { User } from '../models/User'
+import { StartupProfile } from '../models/StartupProfile'
 import { BadRequestError, ConflictError, NotFoundError } from '../utils/errors'
 import type { CreateChatMessageInput } from '../validators/chat.validator'
+import { emitActivity } from './activity.service'
 
 export type ChatRole = 'founder' | 'investor'
 
@@ -197,5 +199,28 @@ export async function createMessage(
   const persisted = await ChatMessage.findById(messageId)
   if (!persisted) throw new ConflictError('The message was not available after saving. Please retry.')
   const [message] = await toDtos([persisted])
+  if (created) {
+    const recipientId = role === 'founder' ? room.investor.toString() : room.founder.toString()
+    const startup = await StartupProfile.findById(room.startup).select('companyName')
+    emitActivity({
+      actorId: userId,
+      type: 'chat.message_sent',
+      title: 'Message sent',
+      description: `A message was sent in the Deal Room for ${startup?.companyName || 'a startup'}.`,
+      audienceUserIds: [userId, recipientId],
+      dealRoomId: room._id.toString(),
+      startupId: room.startup.toString(),
+      href: `/deal-rooms/${room._id.toString()}`,
+      notifications: [{
+        recipientId,
+        type: 'chat.message',
+        title: 'New Deal Room message',
+        body: `You received a new message in ${startup?.companyName || 'a Deal Room'}.`,
+        href: `/deal-rooms/${room._id.toString()}`,
+        entityType: 'deal-room',
+        entityId: room._id.toString(),
+      }],
+    })
+  }
   return { message, created }
 }

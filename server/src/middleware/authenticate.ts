@@ -37,9 +37,12 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     }
 
     // Confirm the user still exists (catches deleted/suspended accounts)
-    const user = await User.findById(payload.userId).select('_id role')
+    const user = await User.findById(payload.userId).select('_id role isSuspended')
     if (!user) {
       return next(new UnauthorizedError('Account not found'))
+    }
+    if (user.isSuspended === true) {
+      return next(new ForbiddenError('This account is suspended. Contact an administrator.'))
     }
 
     req.user = { id: user._id.toString(), role: user.role }

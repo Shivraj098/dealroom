@@ -8,6 +8,10 @@ export interface IUser extends Document {
   email: string
   password: string
   role: UserRole
+  isSuspended: boolean
+  suspensionReason: string
+  suspendedAt?: Date | null
+  suspendedBy?: mongoose.Types.ObjectId | null
   createdAt: Date
   updatedAt: Date
 }
@@ -33,6 +37,10 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Password is required'],
       select: false, // never returned unless explicitly requested
     },
+    isSuspended: { type: Boolean, default: false, required: true, index: true },
+    suspensionReason: { type: String, trim: true, default: '', maxlength: 500 },
+    suspendedAt: { type: Date, default: null },
+    suspendedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     role: {
       type: String,
       enum: {

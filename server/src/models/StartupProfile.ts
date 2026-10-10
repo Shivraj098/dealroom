@@ -36,6 +36,10 @@ export interface IStartupProfile extends Document {
   }
   teamMembers: Array<{ name: string; title: string; bio: string }>
   status: StartupStatus
+  moderationStatus: 'visible' | 'hidden'
+  moderationReason: string
+  moderatedAt?: Date | null
+  moderatedBy?: mongoose.Types.ObjectId | null
   createdAt: Date
   updatedAt: Date
 }
@@ -85,6 +89,10 @@ const startupProfileSchema = new Schema<IStartupProfile>(
       validate: [(members: unknown[]) => members.length <= 12, 'A startup can list at most 12 team members'],
     },
     status: { type: String, enum: ['draft', 'published'], default: 'draft', required: true },
+    moderationStatus: { type: String, enum: ['visible', 'hidden'], default: 'visible', required: true, index: true },
+    moderationReason: { type: String, trim: true, default: '', maxlength: 500 },
+    moderatedAt: { type: Date, default: null },
+    moderatedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true, minimize: false }
 )

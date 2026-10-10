@@ -3,6 +3,7 @@ import { InvestorProfile, type IInvestorProfile } from '../models/InvestorProfil
 import { BadRequestError } from '../utils/errors'
 import type { UserRole } from '../models/User'
 import type { InvestorProfileInput, StartupProfileInput } from '../validators/profile.validator'
+import { emitActivity } from './activity.service'
 
 function hasValue(value: unknown): boolean {
   if (typeof value === 'string') return value.trim().length > 0
@@ -86,6 +87,8 @@ function startupDto(profile: IStartupProfile | null) {
       bio: member.bio,
     })),
     status: profile.status,
+    moderationStatus: profile.moderationStatus ?? 'visible',
+    moderationReason: profile.moderationReason ?? '',
     completionPercentage: calculateStartupCompletion(profile),
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,
@@ -151,9 +154,21 @@ export async function saveStartupProfile(userId: string, input: StartupProfileIn
   }
 
   let profile = await StartupProfile.findOne({ founder: userId })
+  const wasPublished = profile?.status === 'published'
   if (!profile) profile = new StartupProfile({ founder: userId })
   profile.set(input)
   await profile.save()
+  if (!wasPublished && profile.status === 'published') {
+    emitActivity({
+      actorId: userId,
+      type: 'profile.startup_published',
+      title: 'Startup profile published',
+      description: `${profile.companyName} is now published in DealRoom.`,
+      audienceUserIds: [userId],
+      startupId: profile._id.toString(),
+      href: '/workspace',
+    })
+  }
   return startupDto(profile)
 }
 
@@ -168,9 +183,20 @@ export async function saveInvestorProfile(userId: string, input: InvestorProfile
   }
 
   let profile = await InvestorProfile.findOne({ user: userId })
+  const wasPublished = profile?.status === 'published'
   if (!profile) profile = new InvestorProfile({ user: userId })
   profile.set(input)
   await profile.save()
+  if (!wasPublished && profile.status === 'published') {
+    emitActivity({
+      actorId: userId,
+      type: 'profile.investor_published',
+      title: 'Investor profile published',
+      description: `${profile.organizationName} is now published in DealRoom.`,
+      audienceUserIds: [userId],
+      href: '/workspace',
+    })
+  }
   return investorDto(profile)
 }
 

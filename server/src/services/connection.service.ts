@@ -6,6 +6,7 @@ import { StartupProfile, type IStartupProfile } from '../models/StartupProfile'
 import { User, type IUser } from '../models/User'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../utils/errors'
 import type { CreateConnectionRequestInput } from '../validators/connection.validator'
+import { emitActivity } from './activity.service'
 
 type ConnectionRole = 'founder' | 'investor'
 
@@ -141,7 +142,7 @@ export async function listConnectionRequests(userId: string, role: ConnectionRol
 
 export async function getStartupConnectionStatus(investorId: string, startupId: string) {
   assertObjectId(startupId, 'startup ID')
-  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published' }).select('_id')
+  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published', moderationStatus: { $ne: 'hidden' } }).select('_id')
   if (!startup) throw new NotFoundError('Startup not found')
 
   const request = await ConnectionRequest.findOne({ investor: investorId, startup: startup._id }).sort({ createdAt: -1, _id: -1 })
@@ -158,7 +159,7 @@ export async function getStartupConnectionStatus(investorId: string, startupId: 
 export async function createConnectionRequest(investorId: string, startupId: string, input: CreateConnectionRequestInput) {
   assertObjectId(startupId, 'startup ID')
 
-  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published' })
+  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published', moderationStatus: { $ne: 'hidden' } })
   if (!startup) throw new NotFoundError('Startup not found')
 
   const investorProfile = await InvestorProfile.findOne({ user: investorId })
@@ -196,6 +197,25 @@ export async function createConnectionRequest(investorId: string, startupId: str
     throw error
   }
 
+  emitActivity({
+    actorId: investorId,
+    type: 'connection.requested',
+    title: 'Connection request sent',
+    description: `An investor requested an introduction to ${startup.companyName}.`,
+    audienceUserIds: [investorId, startup.founder.toString()],
+    startupId: startup._id.toString(),
+    href: '/workspace',
+    notifications: [{
+      recipientId: startup.founder.toString(),
+      type: 'connection.requested',
+      title: 'New investor introduction',
+      body: `An investor requested a connection with ${startup.companyName}.`,
+      href: '/workspace',
+      entityType: 'connection-request',
+      entityId: request._id.toString(),
+    }],
+  })
+
   return { request: requestStatusDto(request), dealRoom: null }
 }
 
@@ -205,11 +225,13 @@ export async function acceptConnectionRequest(founderId: string, requestId: stri
   if (!request) throw new NotFoundError('Connection request not found')
   if (request.status === 'rejected') throw new ConflictError('This connection request was already rejected')
 
+  let newlyAccepted = false
   if (request.status === 'pending') {
     const publishedStartup = await StartupProfile.findOne({
       _id: request.startup,
       founder: founderId,
       status: 'published',
+      moderationStatus: { $ne: 'hidden' },
     }).select('_id')
     if (!publishedStartup) throw new ConflictError('Publish your startup profile before accepting connection requests')
 
@@ -219,6 +241,7 @@ export async function acceptConnectionRequest(founderId: string, requestId: stri
       { new: true },
     )
     if (updated) {
+      newlyAccepted = true
       request = updated
     } else {
       const latest = await ConnectionRequest.findOne({ _id: request._id, founder: founderId })
@@ -229,6 +252,28 @@ export async function acceptConnectionRequest(founderId: string, requestId: stri
   }
 
   const room = await ensureDealRoom(request)
+  if (newlyAccepted) {
+    const startup = await StartupProfile.findById(request.startup).select('companyName')
+    emitActivity({
+      actorId: founderId,
+      type: 'connection.accepted',
+      title: 'Connection request accepted',
+      description: `Your introduction request for ${startup?.companyName || 'a startup'} was accepted and a Deal Room was created.`,
+      audienceUserIds: [founderId, request.investor.toString()],
+      startupId: request.startup.toString(),
+      dealRoomId: room._id.toString(),
+      href: `/deal-rooms/${room._id.toString()}`,
+      notifications: [{
+        recipientId: request.investor.toString(),
+        type: 'connection.accepted',
+        title: 'Your introduction was accepted',
+        body: `A private Deal Room for ${startup?.companyName || 'the startup'} is ready.`,
+        href: `/deal-rooms/${room._id.toString()}`,
+        entityType: 'deal-room',
+        entityId: room._id.toString(),
+      }],
+    })
+  }
   return { request: requestStatusDto(request), dealRoom: dealRoomSummary(room) }
 }
 
@@ -244,7 +289,28 @@ export async function rejectConnectionRequest(founderId: string, requestId: stri
     { $set: { status: 'rejected', respondedAt: new Date() } },
     { new: true },
   )
-  if (updated) return { request: requestStatusDto(updated), dealRoom: null }
+  if (updated) {
+    const startup = await StartupProfile.findById(updated.startup).select('companyName')
+    emitActivity({
+      actorId: founderId,
+      type: 'connection.rejected',
+      title: 'Connection request declined',
+      description: `The introduction request for ${startup?.companyName || 'a startup'} was declined.`,
+      audienceUserIds: [founderId, updated.investor.toString()],
+      startupId: updated.startup.toString(),
+      href: '/workspace',
+      notifications: [{
+        recipientId: updated.investor.toString(),
+        type: 'connection.rejected',
+        title: 'Your introduction was declined',
+        body: `The request for ${startup?.companyName || 'the startup'} was declined. You can send a new request later.`,
+        href: '/workspace',
+        entityType: 'connection-request',
+        entityId: updated._id.toString(),
+      }],
+    })
+    return { request: requestStatusDto(updated), dealRoom: null }
+  }
 
   const latest = await ConnectionRequest.findOne({ _id: request._id, founder: founderId })
   if (!latest) throw new NotFoundError('Connection request not found')

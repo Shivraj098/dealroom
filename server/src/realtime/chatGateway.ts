@@ -52,8 +52,9 @@ async function authenticateUpgrade(request: IncomingMessage): Promise<Omit<Socke
   let payload: ReturnType<typeof verifyToken>
   try { payload = verifyToken(token) } catch { throw new UpgradeError(401, 'Session expired or invalid') }
 
-  const user = await User.findById(payload.userId).select('_id role')
+  const user = await User.findById(payload.userId).select('_id role isSuspended')
   if (!user || payload.role !== user.role) throw new UpgradeError(401, 'Account not found')
+  if (user.isSuspended === true) throw new UpgradeError(403, 'This account is suspended')
   if (user.role !== 'founder' && user.role !== 'investor') {
     throw new UpgradeError(403, 'Messaging is available to founders and investors only')
   }
@@ -92,6 +93,12 @@ async function handleClientEvent(socket: WebSocket, raw: RawData): Promise<void>
   const principal = principals.get(socket)
   if (!principal) {
     socket.close(1008, 'Authentication required')
+    return
+  }
+
+  const user = await User.findById(principal.userId).select('_id role isSuspended')
+  if (!user || user.isSuspended === true || user.role !== principal.role) {
+    socket.close(1008, 'Account no longer has access')
     return
   }
 
@@ -161,5 +168,14 @@ export function broadcastChatMessage<T extends { id: string; roomId: string; seq
     if (socket.readyState === WebSocket.OPEN && principal?.subscribedRoomIds.has(roomId)) {
       socket.send(event)
     }
+  }
+}
+
+
+/** Immediately close authenticated sockets when an administrator suspends a user. */
+export function closeChatConnectionsForUser(userId: string): void {
+  for (const socket of clients) {
+    const principal = principals.get(socket)
+    if (principal?.userId === userId) socket.close(1008, 'Account suspended')
   }
 }

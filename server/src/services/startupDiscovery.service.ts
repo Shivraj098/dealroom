@@ -57,7 +57,7 @@ function toStartupDto(profile: IStartupProfile, isSaved: boolean) {
 }
 
 function buildFilter(query: StartupDiscoveryQuery): QueryFilter<IStartupProfile> {
-  const filter: QueryFilter<IStartupProfile> = { status: 'published' }
+  const filter: QueryFilter<IStartupProfile> = { status: 'published', moderationStatus: { $ne: 'hidden' } }
 
   if (query.search) {
     const pattern = new RegExp(escapeRegex(query.search), 'i')
@@ -90,6 +90,7 @@ async function getSavedStartupIds(investorId: string): Promise<mongoose.Types.Ob
 export async function getStartupDiscoveryFilters() {
   const industries = await StartupProfile.distinct('industry', {
     status: 'published',
+    moderationStatus: { $ne: 'hidden' },
     industry: { $nin: ['', null] },
   })
 
@@ -141,7 +142,7 @@ export async function listDiscoverableStartups(investorId: string, query: Startu
 export async function getDiscoverableStartup(investorId: string, startupId: string) {
   if (!mongoose.isValidObjectId(startupId)) throw new BadRequestError('Invalid startup ID')
 
-  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published' })
+  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published', moderationStatus: { $ne: 'hidden' } })
   if (!startup) throw new NotFoundError('Startup not found')
 
   const saved = await SavedStartup.exists({ investor: investorId, startup: startup._id })
@@ -151,7 +152,7 @@ export async function getDiscoverableStartup(investorId: string, startupId: stri
 export async function saveStartup(investorId: string, startupId: string) {
   if (!mongoose.isValidObjectId(startupId)) throw new BadRequestError('Invalid startup ID')
 
-  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published' }).select('_id')
+  const startup = await StartupProfile.findOne({ _id: startupId, status: 'published', moderationStatus: { $ne: 'hidden' } }).select('_id')
   if (!startup) throw new NotFoundError('Startup not found')
 
   await SavedStartup.updateOne(

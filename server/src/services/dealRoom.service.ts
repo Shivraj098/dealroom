@@ -7,6 +7,7 @@ import { InvestorProfile } from '../models/InvestorProfile'
 import { StartupProfile } from '../models/StartupProfile'
 import { User } from '../models/User'
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../utils/errors'
+import { emitActivity } from './activity.service'
 import type {
   CreateInformationRequestInput,
   PrivateNoteInput,
@@ -192,6 +193,26 @@ export async function updateDealRoomStatus(
     { new: true, runValidators: true },
   )
   if (!updated) throw new ConflictError('The Deal Room status changed. Refresh and try again.')
+  const startup = await StartupProfile.findById(room.startup).select('companyName')
+  emitActivity({
+    actorId: investorId,
+    type: `deal_room.${input.status}`,
+    title: input.status === 'approved' ? 'Opportunity approved' : 'Opportunity passed',
+    description: `${startup?.companyName || 'The startup'} was marked ${input.status} by the investor.`,
+    audienceUserIds: [investorId, room.founder.toString()],
+    dealRoomId: room._id.toString(),
+    startupId: room.startup.toString(),
+    href: `/deal-rooms/${room._id.toString()}`,
+    notifications: [{
+      recipientId: room.founder.toString(),
+      type: `deal_room.${input.status}`,
+      title: input.status === 'approved' ? 'Your opportunity was approved' : 'The investor passed on the opportunity',
+      body: `${startup?.companyName || 'Your startup'} was marked ${input.status}.`,
+      href: `/deal-rooms/${room._id.toString()}`,
+      entityType: 'deal-room',
+      entityId: room._id.toString(),
+    }],
+  })
   return { room: roomSummary(updated) }
 }
 
@@ -271,6 +292,17 @@ export async function createInformationRequest(roomId: string, investorId: strin
     description: input.description,
     status: 'open',
   })
+  emitActivity({
+    actorId: investorId,
+    type: 'information_request.created',
+    title: 'Information requested',
+    description: `The investor requested information: ${item.title}.`,
+    audienceUserIds: [investorId, room.founder.toString()],
+    dealRoomId: room._id.toString(),
+    startupId: room.startup.toString(),
+    href: `/deal-rooms/${room._id.toString()}`,
+    notifications: [{ recipientId: room.founder.toString(), type: 'information_request.created', title: 'New information request', body: `The investor requested: ${item.title}.`, href: `/deal-rooms/${room._id.toString()}`, entityType: 'information-request', entityId: item._id.toString() }],
+  })
   return { item: informationRequestDto(item) }
 }
 
@@ -293,6 +325,17 @@ export async function respondToInformationRequest(
     { new: true, runValidators: true },
   )
   if (!updated) throw new ConflictError('The information request was closed. Refresh and try again.')
+  emitActivity({
+    actorId: founderId,
+    type: 'information_request.responded',
+    title: 'Information request answered',
+    description: `The founder responded to: ${updated.title}.`,
+    audienceUserIds: [founderId, updated.investor.toString()],
+    dealRoomId: room._id.toString(),
+    startupId: room.startup.toString(),
+    href: `/deal-rooms/${room._id.toString()}`,
+    notifications: [{ recipientId: updated.investor.toString(), type: 'information_request.responded', title: 'A request has been answered', body: `The founder responded to: ${updated.title}.`, href: `/deal-rooms/${room._id.toString()}`, entityType: 'information-request', entityId: updated._id.toString() }],
+  })
   return { item: informationRequestDto(updated) }
 }
 
@@ -314,6 +357,17 @@ export async function closeInformationRequest(roomId: string, requestId: string,
     if (latest?.status === 'closed') return { item: informationRequestDto(latest) }
     throw new ConflictError('The information request could not be closed. Refresh and try again.')
   }
+  emitActivity({
+    actorId: investorId,
+    type: 'information_request.closed',
+    title: 'Information request closed',
+    description: `The investor closed the information request: ${updated.title}.`,
+    audienceUserIds: [investorId, room.founder.toString()],
+    dealRoomId: room._id.toString(),
+    startupId: room.startup.toString(),
+    href: `/deal-rooms/${room._id.toString()}`,
+    notifications: [{ recipientId: room.founder.toString(), type: 'information_request.closed', title: 'Information request closed', body: `The investor closed: ${updated.title}.`, href: `/deal-rooms/${room._id.toString()}`, entityType: 'information-request', entityId: updated._id.toString() }],
+  })
   return { item: informationRequestDto(updated) }
 }
 

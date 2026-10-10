@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt'
 import { User, type IUser } from '../models/User'
 import { signToken } from '../utils/jwt'
-import { ConflictError, UnauthorizedError } from '../utils/errors'
+import { ConflictError, ForbiddenError, UnauthorizedError } from '../utils/errors'
 import type { RegisterInput, LoginInput } from '../validators/auth.validator'
 
 const BCRYPT_ROUNDS = 12
@@ -58,6 +58,10 @@ export async function loginUser(input: LoginInput): Promise<{ user: SafeUser; to
   const passwordMatch = await bcrypt.compare(input.password, user.password)
   if (!passwordMatch) {
     throw new UnauthorizedError('Invalid email or password')
+  }
+
+  if (user.isSuspended === true) {
+    throw new ForbiddenError('This account is suspended. Contact an administrator.')
   }
 
   const token = signToken({ userId: user._id.toString(), role: user.role })
