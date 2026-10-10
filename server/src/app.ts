@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
 import { config } from './config/env'
 import { errorHandler } from './middleware/errorHandler'
+import apiRoutes from './routes/index'
 
 const app = express()
 
@@ -45,15 +46,10 @@ app.get('/health', (req, res) => {
   })
 })
 
-// API routes will be mounted here in future phases
-app.use('/api', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'API endpoint not found',
-  })
-})
+// API routes
+app.use('/api', apiRoutes)
 
-// 404 handler for other routes
+// 404 handler for unmatched /api/* requests and other routes
 app.use((req, res) => {
   res.status(404).json({
     success: false,

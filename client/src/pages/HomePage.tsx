@@ -23,7 +23,7 @@ export function HomePage() {
           </Link>
         </div>
         <p className="text-sm text-gray-500 mt-8">
-          Phase 1: Frontend Foundation Complete
+          Phase 2: Authentication complete
         </p>
       </div>
     </div>
