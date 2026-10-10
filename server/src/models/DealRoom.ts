@@ -11,6 +11,7 @@ export interface IDealRoom extends Document {
   investor: mongoose.Types.ObjectId
   connectionRequest: mongoose.Types.ObjectId
   status: DealRoomStatus
+  messageSequence: number
   createdAt: Date
   updatedAt: Date
 }
@@ -22,6 +23,8 @@ const dealRoomSchema = new Schema<IDealRoom>(
     investor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     connectionRequest: { type: Schema.Types.ObjectId, ref: 'ConnectionRequest', required: true },
     status: { type: String, enum: DEAL_ROOM_STATUSES, default: 'active', required: true },
+    // Atomic per-room cursor used to order persisted chat messages and resume after reconnects.
+    messageSequence: { type: Number, default: 0, min: 0, required: true },
   },
   { timestamps: true, minimize: false }
 )

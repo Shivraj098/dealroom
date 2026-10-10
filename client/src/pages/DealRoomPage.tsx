@@ -4,6 +4,7 @@ import { useDealRoom, useUpdateDealRoomStatus } from '@/features/deal-rooms/api'
 import { EvaluationPanel } from '@/features/deal-rooms/components/EvaluationPanel'
 import { InformationRequestsPanel } from '@/features/deal-rooms/components/InformationRequestsPanel'
 import { PrivateNotesPanel } from '@/features/deal-rooms/components/PrivateNotesPanel'
+import { ChatPanel } from '@/features/deal-rooms/components/ChatPanel'
 import type { DealRoomStatus } from '@/features/deal-rooms/types'
 
 const STATUS_STYLE: Record<DealRoomStatus, string> = {
@@ -48,6 +49,10 @@ export function DealRoomPage() {
           {statusMutation.isSuccess && <p role="status" className="mt-4 text-sm text-emerald-700">Deal Room status updated.</p>}
           {readOnly && <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600"><strong className="text-slate-800">This Deal Room is finalized.</strong> Evaluation, private-note edits, and information-request changes are read-only. Existing records remain available for reference.</div>}
           {details.startup.description && <div className="mt-6 border-t border-slate-100 pt-5"><h2 className="text-sm font-semibold text-slate-900">Company overview</h2><p className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600">{details.startup.description}</p><div className="mt-4 grid gap-4 sm:grid-cols-2"><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Problem</p><p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{details.startup.problem || 'Not provided'}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Solution</p><p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-600">{details.startup.solution || 'Not provided'}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Target market</p><p className="mt-1 text-sm leading-6 text-slate-600">{details.startup.targetMarket || 'Not provided'}</p></div><div><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Business model</p><p className="mt-1 text-sm leading-6 text-slate-600">{details.startup.businessModel || 'Not provided'}</p></div></div>{details.startup.website && <a href={details.startup.website} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-700 underline">Company website <ArrowUpRight size={14} /></a>}</div>}
+        </div>
+
+        <div className="mt-6">
+          <ChatPanel roomId={details.room.id} role={details.viewerRole} readOnly={readOnly} />
         </div>
 
         <div className="mt-6 grid items-start gap-6 xl:grid-cols-2">

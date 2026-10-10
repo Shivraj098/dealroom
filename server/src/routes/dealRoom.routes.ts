@@ -3,6 +3,8 @@ import { authenticate, requireRole } from '../middleware/authenticate'
 import { csrfProtection } from '../middleware/csrfProtection'
 import { validateBody } from '../middleware/validateRequest'
 import * as dealRoomController from '../controllers/dealRoom.controller'
+import * as chatController from '../controllers/chat.controller'
+import { createChatMessageSchema } from '../validators/chat.validator'
 import {
   createInformationRequestSchema,
   createPrivateNoteSchema,
@@ -17,6 +19,8 @@ router.use(authenticate, requireRole('founder', 'investor'))
 
 router.get('/', dealRoomController.listMyRooms)
 router.get('/:dealRoomId', dealRoomController.getRoom)
+router.get('/:dealRoomId/messages', chatController.listMessages)
+router.post('/:dealRoomId/messages', csrfProtection, validateBody(createChatMessageSchema), chatController.createMessage)
 router.patch('/:dealRoomId/status', requireRole('investor'), csrfProtection, validateBody(updateDealRoomStatusSchema), dealRoomController.changeStatus)
 
 router.get('/:dealRoomId/evaluation', requireRole('investor'), dealRoomController.getEvaluation)

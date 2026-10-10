@@ -1,6 +1,7 @@
 import { config } from './config/env'
 import { connectDatabase, disconnectDatabase } from './config/database'
 import app from './app'
+import { attachChatGateway } from './realtime/chatGateway'
 
 async function startServer() {
   try {
@@ -14,12 +15,19 @@ async function startServer() {
       console.log(`✓ Client origin: ${config.clientOrigin}`)
     })
 
+    // Keep realtime messaging on the same HTTP server so cookies and origin checks apply.
+    const closeChatGateway = attachChatGateway(server)
+
     // Graceful shutdown
     const shutdown = async (signal: string) => {
       console.log(`\n${signal} received, shutting down gracefully...`)
-      
-      server.close(() => {
-        console.log('✓ HTTP server closed')
+
+      await closeChatGateway()
+      await new Promise<void>((resolve) => {
+        server.close(() => {
+          console.log('✓ HTTP server closed')
+          resolve()
+        })
       })
 
       await disconnectDatabase()
