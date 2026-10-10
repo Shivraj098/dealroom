@@ -19,7 +19,7 @@ export function LoginForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await loginMutation.mutateAsync(data)
-      navigate('/workspace')
+      navigate('/onboarding')
     } catch {
       // error displayed from loginMutation.error below
     }

@@ -60,7 +60,12 @@ export function errorHandler(
   }
 
   // Mongoose duplicate key (unique index violation).
-  if ((err as NodeJS.ErrnoException & { keyPattern?: Record<string, unknown> }).code === 11000) {
+  const mongoError = err as {
+  code?: unknown;
+  keyPattern?: Record<string, unknown>;
+};
+
+if (mongoError.code === 11000) {
     const field = Object.keys(
       (err as NodeJS.ErrnoException & { keyPattern?: Record<string, unknown> }).keyPattern ?? {}
     )[0]

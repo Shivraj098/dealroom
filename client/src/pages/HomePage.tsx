@@ -23,7 +23,7 @@ export function HomePage() {
           </Link>
         </div>
         <p className="text-sm text-gray-500 mt-8">
-          Phase 2: Authentication complete
+          A clearer path from introduction to investment
         </p>
       </div>
     </div>

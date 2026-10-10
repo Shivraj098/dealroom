@@ -8,35 +8,30 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[]
 }
 
-/**
- * Wraps a route that requires an authenticated session.
- * - While the session is loading, renders a neutral loading state.
- * - Unauthenticated users are redirected to /login (with return path preserved).
- * - Authenticated users without the required role see a 403 message.
- */
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const location = useLocation()
   const { data: user, isLoading, isError } = useCurrentUser()
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <span className="text-sm text-gray-500">Loading…</span>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-500" />
+          Restoring your session…
+        </div>
       </div>
     )
   }
 
-  // Unauthenticated or session error → redirect to login
   if (isError || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Role guard
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2">
-        <h1 className="text-2xl font-bold text-gray-900">Access denied</h1>
-        <p className="text-gray-500 text-sm">You don't have permission to view this page.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-slate-50 px-6 text-center">
+        <h1 className="text-2xl font-semibold text-slate-900">Access denied</h1>
+        <p className="text-sm text-slate-500">Your account does not have permission to view this page.</p>
       </div>
     )
   }

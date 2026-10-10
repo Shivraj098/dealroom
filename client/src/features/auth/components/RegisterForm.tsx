@@ -19,7 +19,7 @@ export function RegisterForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await registerMutation.mutateAsync(data)
-      navigate('/workspace')
+      navigate('/onboarding')
     } catch {
       // error displayed from registerMutation.error below
     }

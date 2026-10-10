@@ -45,7 +45,19 @@ export async function apiRequest<T>(
   const result = await response.json()
 
   if (!response.ok || !result.success) {
-    throw new Error(result.error ?? 'Request failed')
+    // Surface actionable validation feedback when the API includes field-level details.
+    const detailMessages = Array.isArray(result.details)
+      ? result.details
+          .map((detail: unknown) => {
+            if (typeof detail === 'string') return detail
+            if (detail && typeof detail === 'object' && 'message' in detail && typeof detail.message === 'string') {
+              return detail.message
+            }
+            return undefined
+          })
+          .filter((message: string | undefined): message is string => Boolean(message))
+      : []
+    throw new Error(detailMessages[0] ?? result.error ?? 'Request failed')
   }
 
   return result.data
