@@ -48,6 +48,8 @@ export interface StartupProfile {
   }
   teamMembers: StartupTeamMember[]
   status: ProfileStatus
+  moderationStatus: 'visible' | 'hidden'
+  moderationReason: string
   completionPercentage: number
   createdAt: string
   updatedAt: string

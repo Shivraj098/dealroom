@@ -6,6 +6,7 @@ import { InformationRequestsPanel } from '@/features/deal-rooms/components/Infor
 import { PrivateNotesPanel } from '@/features/deal-rooms/components/PrivateNotesPanel'
 import { ChatPanel } from '@/features/deal-rooms/components/ChatPanel'
 import type { DealRoomStatus } from '@/features/deal-rooms/types'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 const STATUS_STYLE: Record<DealRoomStatus, string> = {
   active: 'bg-indigo-50 text-indigo-700',
@@ -38,7 +39,7 @@ export function DealRoomPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] text-slate-900">
-      <header className="border-b border-slate-200/80 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8"><Link to="/workspace" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white"><Building2 size={18} /></span><span className="text-lg font-semibold tracking-tight">DealRoom</span></Link><Link to="/workspace" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"><ArrowLeft size={14} /> Workspace</Link></div></header>
+      <header className="border-b border-slate-200/80 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8"><Link to="/workspace" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white"><Building2 size={18} /></span><span className="text-lg font-semibold tracking-tight">DealRoom</span></Link><div className="flex items-center gap-2"><NotificationBell /><Link to="/workspace" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"><ArrowLeft size={14} /> Workspace</Link></div></div></header>
       <main className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-10">
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"><LockKeyhole size={12} /> Private workspace</span><span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLE[details.room.status]}`}>{details.room.status}</span></div><p className="mt-4 text-sm font-medium text-indigo-700">Due diligence workspace</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{details.startup.companyName}</h1><p className="mt-2 max-w-3xl text-base leading-7 text-slate-600">{details.startup.tagline}</p><div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-500"><span>{details.startup.industry}</span><span className="capitalize">{details.startup.stage.replaceAll('-', ' ')}</span>{details.startup.headquarters && <span>{details.startup.headquarters}</span>}</div></div>

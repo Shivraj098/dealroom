@@ -1,6 +1,6 @@
 import type { StartupProfile, StartupStage } from '@/types/models'
 
-export type DiscoverableStartup = Omit<StartupProfile, 'status' | 'completionPercentage'> & {
+export type DiscoverableStartup = Omit<StartupProfile, 'status' | 'completionPercentage' | 'moderationStatus' | 'moderationReason'> & {
   status: 'published'
   isSaved: boolean
 }
