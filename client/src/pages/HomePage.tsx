@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-linear-to-b from-gray-50 to-gray-100">
       <div className="text-center space-y-6 px-4">
         <h1 className="text-6xl font-bold text-gray-900">DealRoom</h1>
         <p className="text-xl text-gray-600 max-w-2xl">
