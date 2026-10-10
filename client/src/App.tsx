@@ -8,6 +8,9 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import { OnboardingPage } from '@/features/profiles/pages/OnboardingPage'
 import { WorkspacePage } from '@/pages/WorkspacePage'
+import { InvestorRoute } from '@/components/layouts/InvestorRoute'
+import { StartupDiscoveryPage } from '@/pages/StartupDiscoveryPage'
+import { StartupDetailPage } from '@/pages/StartupDetailPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 function FullPageLoader({ label = 'Loading your workspace…' }: { label?: string }) {
@@ -38,6 +41,8 @@ function App() {
         <Route path="/register" element={<AuthGuard><RegisterPage /></AuthGuard>} />
         <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
         <Route path="/workspace" element={<ProtectedRoute><WorkspacePage /></ProtectedRoute>} />
+        <Route path="/discover" element={<ProtectedRoute allowedRoles={['investor']}><InvestorRoute><StartupDiscoveryPage /></InvestorRoute></ProtectedRoute>} />
+        <Route path="/discover/:startupId" element={<ProtectedRoute allowedRoles={['investor']}><InvestorRoute><StartupDetailPage /></InvestorRoute></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
