@@ -4,6 +4,7 @@ import { ArrowLeft, Bookmark, BookmarkCheck, Building2, CalendarDays, CircleDoll
 import { useSetStartupSaved, useStartupDetails } from '@/features/startups/api'
 import { useCreateConnectionRequest, useStartupConnectionStatus } from '@/features/connections/api'
 import type { DiscoverableStartup } from '@/features/startups/types'
+import { AppHeader } from '@/components/layouts/AppHeader'
 import type { StartupStage } from '@/types/models'
 
 const STAGE_LABELS: Record<StartupStage, string> = {
@@ -45,11 +46,11 @@ export function StartupDetailPage() {
   const startup = startupQuery.data
 
   if (startupQuery.isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#f7f8fc] text-sm text-slate-500"><span className="inline-flex items-center gap-2"><LoaderCircle size={16} className="animate-spin" />Loading startup profile…</span></div>
+    return <div className="min-h-screen bg-[#f7f8fc]"><AppHeader /><div className="flex min-h-[55vh] items-center justify-center text-sm text-slate-500" role="status"><LoaderCircle size={16} className="mr-2 animate-spin" />Loading startup…</div></div>
   }
 
   if (startupQuery.isError || !startup) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#f7f8fc] px-5"><div className="max-w-md rounded-2xl border border-slate-200 bg-white p-7 text-center"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500"><Building2 size={20} /></span><h1 className="mt-4 text-xl font-semibold text-slate-950">Startup not available</h1><p className="mt-2 text-sm leading-6 text-slate-500">This startup may no longer be published, or it could not be loaded right now.</p><Link to="/discover" className="mt-5 inline-flex rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">Back to discovery</Link></div></div>
+    return <div className="min-h-screen bg-[#f7f8fc]"><AppHeader /><main className="flex min-h-[55vh] items-center justify-center px-5"><div className="dr-panel max-w-md p-7 text-center"><Building2 size={22} className="mx-auto text-slate-400" /><h1 className="mt-4 text-xl font-semibold text-slate-950">Startup unavailable</h1><p className="mt-2 text-sm leading-6 text-slate-500">It may no longer be published, or the request may have failed.</p><button type="button" onClick={() => void startupQuery.refetch()} className="dr-primary-button mx-auto mt-5">Try again</button><Link to="/discover" className="mt-4 inline-flex text-sm font-semibold text-indigo-700">Back to discovery</Link></div></main></div>
   }
 
   return <StartupProfileContent
@@ -94,7 +95,7 @@ function StartupProfileContent({ startup, isSaving, saveError, onToggleSaved, co
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] text-slate-900">
-      <header className="border-b border-slate-200/80 bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8"><Link to="/workspace" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white"><Building2 size={18} /></span><span className="text-lg font-semibold tracking-tight">DealRoom</span></Link><Link to="/discover" className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">All startups</Link></div></header>
+      <AppHeader />
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
         <Link to="/discover" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"><ArrowLeft size={15} /> Back to discovery</Link>
 

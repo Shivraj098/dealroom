@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Building2, BriefcaseBusiness, LoaderCircle, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import { useRegister } from '../api'
 import { registerSchema, type RegisterFormData } from '../schemas'
 
@@ -14,130 +15,62 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { role: 'founder' },
   })
 
   const onSubmit = handleSubmit(async (data) => {
     try {
       await registerMutation.mutateAsync(data)
-      navigate('/onboarding')
+      navigate('/onboarding', { replace: true })
     } catch {
-      // error displayed from registerMutation.error below
+      // Error is displayed above the form.
     }
   })
 
+  const busy = isSubmitting || registerMutation.isPending
+
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
-      {/* Server error */}
-      {registerMutation.error && (
-        <div role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {registerMutation.error.message}
+      {registerMutation.error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-5 text-rose-700">{registerMutation.error.message}</div>}
+
+      <div>
+        <label htmlFor="name" className="mb-1.5 block text-sm font-semibold text-slate-700">Full name</label>
+        <div className="relative"><UserRound size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" /><input id="name" type="text" autoComplete="name" {...register('name')} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-wait disabled:bg-slate-50" disabled={busy} placeholder="Jane Smith" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'name-error' : undefined} /></div>
+        {errors.name && <p id="name-error" className="mt-1.5 text-xs text-rose-600">{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700">Email address</label>
+        <div className="relative"><Mail size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" /><input id="email" type="email" autoComplete="email" {...register('email')} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-wait disabled:bg-slate-50" disabled={busy} placeholder="you@example.com" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'email-error' : undefined} /></div>
+        {errors.email && <p id="email-error" className="mt-1.5 text-xs text-rose-600">{errors.email.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-700">Password</label>
+        <div className="relative"><LockKeyhole size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" /><input id="password" type="password" autoComplete="new-password" {...register('password')} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-wait disabled:bg-slate-50" disabled={busy} placeholder="At least 8 characters" aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'password-error' : undefined} /></div>
+        {errors.password && <p id="password-error" className="mt-1.5 text-xs text-rose-600">{errors.password.message}</p>}
+      </div>
+
+      <fieldset>
+        <legend className="mb-2.5 text-sm font-semibold text-slate-700">I am joining as a…</legend>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="cursor-pointer">
+            <input type="radio" value="founder" {...register('role')} className="peer sr-only" disabled={busy} />
+            <span className="flex min-h-24 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/70 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 transition peer-checked:bg-indigo-100"><Building2 size={16} /></span><span className="text-sm font-semibold text-slate-900">Founder</span><span className="text-xs leading-4 text-slate-500">Share your startup</span></span>
+          </label>
+          <label className="cursor-pointer">
+            <input type="radio" value="investor" {...register('role')} className="peer sr-only" disabled={busy} />
+            <span className="flex min-h-24 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/70 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700"><BriefcaseBusiness size={16} /></span><span className="text-sm font-semibold text-slate-900">Investor</span><span className="text-xs leading-4 text-slate-500">Explore opportunities</span></span>
+          </label>
         </div>
-      )}
+        {errors.role && <p className="mt-1.5 text-xs text-rose-600">{errors.role.message}</p>}
+      </fieldset>
 
-      {/* Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          Full name
-        </label>
-        <input
-          id="name"
-          type="text"
-          autoComplete="name"
-          {...register('name')}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
-          placeholder="Jane Smith"
-        />
-        {errors.name && (
-          <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
-        )}
-      </div>
-
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email address
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          {...register('email')}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
-          placeholder="you@example.com"
-        />
-        {errors.email && (
-          <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          {...register('password')}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
-          placeholder="At least 8 characters"
-        />
-        {errors.password && (
-          <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-        )}
-      </div>
-
-      {/* Role */}
-      <div>
-        <fieldset>
-          <legend className="block text-sm font-medium text-gray-700 mb-2">I am a…</legend>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="founder"
-                {...register('role')}
-                className="h-4 w-4 accent-blue-600"
-                disabled={isSubmitting}
-              />
-              <span className="text-sm text-gray-700">Founder</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="investor"
-                {...register('role')}
-                className="h-4 w-4 accent-blue-600"
-                disabled={isSubmitting}
-              />
-              <span className="text-sm text-gray-700">Investor</span>
-            </label>
-          </div>
-        </fieldset>
-        {errors.role && (
-          <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
-        )}
-      </div>
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-      >
-        {isSubmitting ? 'Creating account…' : 'Create account'}
+      <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:cursor-wait disabled:opacity-60">
+        {busy ? <><LoaderCircle size={16} className="animate-spin" /> Creating account…</> : <>Create account <ArrowRight size={16} /></>}
       </button>
 
-      <p className="text-center text-sm text-gray-600">
-        Already have an account?{' '}
-        <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-          Sign in
-        </Link>
-      </p>
+      <p className="text-center text-sm text-slate-500">Already have an account? <Link to="/login" className="font-semibold text-indigo-700 underline-offset-4 hover:underline">Sign in</Link></p>
     </form>
   )
 }

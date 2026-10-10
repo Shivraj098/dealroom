@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { LoaderCircle } from 'lucide-react'
+import { AlertTriangle, LoaderCircle, RefreshCw } from 'lucide-react'
 import { useCurrentUser } from '@/features/auth/api'
 import { useMyProfile } from '@/features/profiles/api'
 import { ProtectedRoute } from '@/components/layouts/ProtectedRoute'
+import { ApiRequestError } from '@/lib/api-client'
+import { AppHeader } from '@/components/layouts/AppHeader'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
@@ -15,20 +17,55 @@ import { DealRoomPage } from '@/pages/DealRoomPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 function FullPageLoader({ label = 'Loading your workspace…' }: { label?: string }) {
-  return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="flex items-center gap-3 text-sm text-slate-500"><LoaderCircle size={17} className="animate-spin" />{label}</div></div>
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-5">
+      <div role="status" className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-sm">
+        <LoaderCircle size={17} className="animate-spin text-indigo-600" />
+        {label}
+      </div>
+    </div>
+  )
 }
 
 /** Route authenticated users to onboarding or workspace according to saved profile state. */
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { data: user, isLoading, isError } = useCurrentUser()
-  const profileQuery = useMyProfile(Boolean(user && user.role !== 'admin'))
+  const userQuery = useCurrentUser()
+  const { data: user, isLoading, isError, error } = userQuery
+  const isUnauthorized = error instanceof ApiRequestError && error.status === 401
+  const profileQuery = useMyProfile(Boolean(user && !isUnauthorized && user.role !== 'admin'))
 
   if (isLoading) return <FullPageLoader label="Checking your session…" />
-  if (isError || !user) return <>{children}</>
-  if (user.role === 'admin') return <Navigate to="/workspace" replace />
-  if (profileQuery.isError) {
-    return <div className="flex min-h-screen items-center justify-center bg-slate-50 px-5"><div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center"><h1 className="text-lg font-semibold text-slate-900">Could not load your profile</h1><p className="mt-2 text-sm text-slate-500">Try again before continuing.</p><button onClick={() => void profileQuery.refetch()} className="mt-5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white">Try again</button></div></div>
+  if (!user && isError && !isUnauthorized) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-5 py-10">
+        <section className="dr-panel w-full max-w-md p-6 text-center sm:p-8">
+          <AlertTriangle size={22} className="mx-auto text-amber-700" aria-hidden="true" />
+          <h1 className="mt-3 text-lg font-semibold text-slate-950">Couldn't check your session</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">The server didn't respond as expected. Retry before continuing.</p>
+          <button type="button" onClick={() => void userQuery.refetch()} className="dr-primary-button mx-auto mt-5"><RefreshCw size={15} /> Try again</button>
+        </section>
+      </main>
+    )
   }
+  if (!user || isUnauthorized) return <>{children}</>
+  if (user.role === 'admin') return <Navigate to="/workspace" replace />
+
+  if (profileQuery.isError) {
+    return (
+      <div className="min-h-screen bg-[#f7f8fc]">
+        <AppHeader showNotifications={false} />
+        <main className="flex min-h-[60vh] items-center justify-center px-5 py-10">
+          <section className="dr-panel w-full max-w-md p-6 text-center sm:p-8">
+            <RefreshCw size={20} className="mx-auto text-amber-700" aria-hidden="true" />
+            <h1 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">Profile unavailable</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Your session is active, but the profile couldn't be loaded. Retry or use Sign out above to switch accounts.</p>
+            <button type="button" onClick={() => void profileQuery.refetch()} className="dr-primary-button mx-auto mt-5"><RefreshCw size={15} /> Try again</button>
+          </section>
+        </main>
+      </div>
+    )
+  }
+
   if (profileQuery.isLoading || !profileQuery.data) return <FullPageLoader />
   return <Navigate to={profileQuery.data.onboardingComplete ? '/workspace' : '/onboarding'} replace />
 }

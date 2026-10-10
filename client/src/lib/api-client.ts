@@ -3,6 +3,13 @@ const API_BASE = import.meta.env.VITE_API_URL || ''
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
+export class ApiRequestError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+    this.name = 'ApiRequestError'
+  }
+}
+
 /**
  * Read the signed CSRF token from the readable `csrf-token` cookie.
  * Returns an empty string when not present (e.g. unauthenticated or before init).
@@ -57,7 +64,7 @@ export async function apiRequest<T>(
           })
           .filter((message: string | undefined): message is string => Boolean(message))
       : []
-    throw new Error(detailMessages[0] ?? result.error ?? 'Request failed')
+    throw new ApiRequestError(detailMessages[0] ?? result.error ?? 'Request failed', response.status)
   }
 
   return result.data

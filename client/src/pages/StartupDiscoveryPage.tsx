@@ -1,10 +1,11 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, Building2, CircleDollarSign,
+  ArrowRight, Bookmark, BookmarkCheck, Building2, CircleDollarSign,
   LoaderCircle, MapPin, Search, SlidersHorizontal, Users, X,
 } from 'lucide-react'
 import { useCurrentUser } from '@/features/auth/api'
+import { AppHeader } from '@/components/layouts/AppHeader'
 import { useSetStartupSaved, useStartupDiscovery, useStartupDiscoveryFilters } from '@/features/startups/api'
 import type { StartupDiscoveryParams, DiscoverableStartup } from '@/features/startups/types'
 import type { StartupStage } from '@/types/models'
@@ -145,17 +146,11 @@ export function StartupDiscoveryPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] text-slate-900">
-      <header className="border-b border-slate-200/80 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link to="/workspace" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white"><Building2 size={18} /></span><span className="text-lg font-semibold tracking-tight">DealRoom</span></Link>
-          <div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">Investor workspace</span><Link to="/workspace" className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Workspace</Link></div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
-        <Link to="/workspace" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"><ArrowLeft size={15} /> Back to workspace</Link>
-        <div className="mt-6 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-          <div><p className="text-sm font-semibold text-indigo-700">Discover</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Find your next opportunity.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Explore published startups, learn what they are building, and save promising companies for a closer look.</p></div>
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div><p className="dr-page-kicker">Discovery</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Published startups</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Search, compare, and save profiles worth a closer look.</p></div>
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm"><span className="font-semibold text-slate-950">{results?.pagination.total ?? '—'}</span> published {results?.pagination.total === 1 ? 'startup' : 'startups'}</div>
         </div>
 

@@ -8,10 +8,7 @@ export const AUTH_QUERY_KEY = ['currentUser'] as const
 
 // ─── CSRF initialisation ──────────────────────────────────────────────────────
 
-/**
- * Fetch a fresh CSRF token from the server and store it in the readable cookie.
- * Must be called before any state-changing auth request.
- */
+/** Fetch a fresh signed CSRF token before a state-changing request. */
 export async function initCsrf(): Promise<void> {
   await apiRequest('/api/auth/csrf')
 }
@@ -21,7 +18,7 @@ export async function initCsrf(): Promise<void> {
 export function useCurrentUser() {
   return useQuery({
     queryKey: AUTH_QUERY_KEY,
-    queryFn: () => apiRequest<{ user: User }>('/api/auth/me').then((d) => d.user),
+    queryFn: () => apiRequest<{ user: User }>('/api/auth/me').then((data) => data.user),
     retry: false,
     staleTime: 5 * 60 * 1000,
   })
@@ -76,11 +73,20 @@ export function useLogin() {
 export function useLogout() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () =>
-      apiRequest('/api/auth/logout', { method: 'POST' }),
+    mutationFn: async () => {
+      // Refresh the readable CSRF cookie before logout so an older token cannot
+      // strand the user in an authenticated-looking client session.
+      await initCsrf()
+      return apiRequest<{ message: string }>('/api/auth/logout', { method: 'POST' })
+    },
+    onMutate: async () => {
+      // Avoid a concurrent session/profile request winning a race with logout.
+      await queryClient.cancelQueries()
+    },
     onSuccess: () => {
+      // Clear user-specific data while keeping an explicit logged-out auth state.
       queryClient.setQueryData(AUTH_QUERY_KEY, null)
-      queryClient.clear()
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== AUTH_QUERY_KEY[0] })
     },
   })
 }

@@ -1,11 +1,13 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowRight, LoaderCircle, LockKeyhole, Mail } from 'lucide-react'
 import { useLogin } from '../api'
 import { loginSchema, type LoginFormData } from '../schemas'
 
 export function LoginForm() {
   const navigate = useNavigate()
+  const location = useLocation()
   const loginMutation = useLogin()
 
   const {
@@ -19,74 +21,43 @@ export function LoginForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await loginMutation.mutateAsync(data)
-      navigate('/onboarding')
+      // The workspace routes incomplete accounts to onboarding and keeps
+      // completed accounts in their normal workspace.
+      navigate('/workspace', { replace: true })
     } catch {
-      // error displayed from loginMutation.error below
+      // Error is displayed below the form heading.
     }
   })
 
+  const busy = isSubmitting || loginMutation.isPending
+
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
-      {/* Server error */}
-      {loginMutation.error && (
-        <div role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {loginMutation.error.message}
+      {loginMutation.error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-5 text-rose-700">{loginMutation.error.message}</div>}
+
+      <div>
+        <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700">Email address</label>
+        <div className="relative">
+          <Mail size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input id="email" type="email" autoComplete="email" autoFocus {...register('email')} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-wait disabled:bg-slate-50" disabled={busy} placeholder="you@example.com" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'email-error' : undefined} />
         </div>
-      )}
-
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email address
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          {...register('email')}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
-          placeholder="you@example.com"
-        />
-        {errors.email && (
-          <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-        )}
+        {errors.email && <p id="email-error" className="mt-1.5 text-xs text-rose-600">{errors.email.message}</p>}
       </div>
 
-      {/* Password */}
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          {...register('password')}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
-          placeholder="Your password"
-        />
-        {errors.password && (
-          <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-        )}
+        <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-700">Password</label>
+        <div className="relative">
+          <LockKeyhole size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input id="password" type="password" autoComplete="current-password" {...register('password')} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-wait disabled:bg-slate-50" disabled={busy} placeholder="Your password" aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'password-error' : undefined} />
+        </div>
+        {errors.password && <p id="password-error" className="mt-1.5 text-xs text-rose-600">{errors.password.message}</p>}
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-      >
-        {isSubmitting ? 'Signing in…' : 'Sign in'}
+      <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/20 disabled:cursor-wait disabled:opacity-60">
+        {busy ? <><LoaderCircle size={16} className="animate-spin" /> Signing in…</> : <>Sign in <ArrowRight size={16} /></>}
       </button>
 
-      <p className="text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-          Create one
-        </Link>
-      </p>
+      <p className="text-center text-sm text-slate-500">New to DealRoom? <Link to="/register" className="font-semibold text-indigo-700 underline-offset-4 hover:underline">Create an account</Link></p>
     </form>
   )
 }
