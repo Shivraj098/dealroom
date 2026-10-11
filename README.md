@@ -1,159 +1,226 @@
 # DealRoom
 
-Startup due-diligence and investor collaboration platform.
+DealRoom is a MERN stack application for founders and investors to discover startups, manage introduction requests, and collaborate through private Deal Rooms during due diligence.
 
-## Status
+## What it does
 
-✅ **Phase 1 Complete** - Project setup and architecture established
+DealRoom connects the startup discovery workflow to the work that happens after an investor is interested: a founder can review an introduction request, an accepted request creates a private Deal Room, and both participants can use that room to exchange messages and handle due-diligence requests.
 
-## Tech Stack
+## Features
 
-**Frontend:** React 19, TypeScript 6, Vite 8, Tailwind CSS v4, shadcn/ui  
-**Backend:** Node.js 24, Express 5, TypeScript 7, MongoDB Atlas, Mongoose  
-**Authentication:** JWT in HTTP-only cookies, bcrypt password hashing  
+### Accounts and profiles
+- Registration and login for founders and investors.
+- Password hashing, cookie-based sessions, role-based access control, and CSRF protection for state-changing requests.
+- Founder startup profiles with draft saving, publication validation, editing, and profile-completeness feedback.
+- Investor profiles describing investment thesis, sectors, stages, geography, and investment range.
 
-## Project Structure
+### Startup discovery
+- Published-startup discovery with search, filters, sorting, and pagination.
+- Startup detail pages and a persistent saved-startup list.
+- Draft startup profiles are excluded from normal investor discovery.
 
+### Connection requests and Deal Rooms
+- Investors can request introductions to published startups.
+- Founders can accept or reject requests; rejected requests remain in history and can be followed by a new request.
+- Accepting a request creates a private Deal Room for the founder and investor.
+- Backend access checks restrict rooms and actions to their participants and permitted roles.
+
+### Due diligence and collaboration
+- Structured investor evaluation across Market, Product, Traction, Team, Business Model, Financials, and Risk.
+- Investor-private notes that are not exposed to founders.
+- Information requests, founder responses, optional supporting links, and request status tracking.
+- Deal Room decisions, with Approved and Passed as terminal outcomes in the current implementation.
+- Persistent messages stored in MongoDB, live delivery through WebSockets, and sequence-based catch-up when a client reconnects.
+
+### Workspace and administration
+- In-app notifications and unread counts.
+- Activity timelines for relevant workflow events.
+- Profile-completeness indicators.
+- Admin tools for user suspension/restoration and startup visibility moderation. Public registration does not allow users to select the admin role.
+- Light and dark themes, responsive layouts, and account switching/sign-out controls.
+
+## Technology
+
+| Area | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React |
+| Routing and data | React Router, TanStack Query |
+| Forms and validation | React Hook Form, Zod |
+| Backend | Node.js, Express 5, TypeScript |
+| Database | MongoDB Atlas, Mongoose |
+| Authentication | bcrypt, JWT in HTTP-only cookies, CSRF protection |
+| Realtime | `ws` WebSocket server and the browser WebSocket API |
+| Security and middleware | Helmet, restricted CORS, request rate limiting, centralized error handling |
+
+The codebase is organized as a modular monolith: the frontend and backend are separate applications, while backend responsibilities are separated into routes, controllers, services, models, validators, and middleware. MongoDB is the source of truth for persisted messages; WebSockets provide live delivery rather than replacing persistence.
+
+## Repository layout
+
+```text
+.
+├── client/                   # React + Vite frontend
+│   └── src/
+│       ├── components/       # Shared layout and theme components
+│       ├── features/         # Auth, profiles, startups, connections,
+│       │                     # Deal Rooms, chat, notifications, activity, admin
+│       ├── pages/             # Home, workspace, discovery, detail, Deal Room
+│       └── lib/               # API client and query client
+├── server/                   # Express API and WebSocket gateway
+│   └── src/
+│       ├── config/            # Environment and database configuration
+│       ├── controllers/       # HTTP request handling
+│       ├── middleware/        # Authentication, authorization, validation, errors
+│       ├── models/            # Mongoose models
+│       ├── realtime/          # WebSocket gateway
+│       ├── routes/            # API route registration
+│       ├── services/          # Business logic
+│       └── validators/        # Request schemas
+├── .kiro/steering/            # Product, technology, and workflow context
+└── docs/                      # Architecture and implementation notes
 ```
-dealroom/
-├── client/     # React frontend (Vite)
-├── server/     # Express backend
-└── docs/       # Project documentation
-```
 
-## Local Development
+There is no root `package.json`; install and run the frontend and backend from their respective directories.
 
-### Prerequisites
+## Requirements
 
-- Node.js 24 LTS
-- MongoDB Atlas account
+- Node.js 24 LTS recommended.
+- npm (bundled with Node.js).
+- A MongoDB Atlas cluster or another MongoDB deployment that supports transactions. The messaging implementation uses transactions to persist messages with their per-room sequence.
+- Network access from your machine to the database. For Atlas, add your current IP address to the project's Network Access list and use a database user with appropriate read/write permissions.
 
-### Setup
+## Local setup
 
-**1. Backend Setup:**
+### 1. Configure the backend
 
-```bash
+In a terminal at the repository root:
+
+```powershell
 cd server
-npm install
-cp .env.example .env
-# Edit .env and configure:
-#   - MONGODB_URI (your MongoDB Atlas connection string)
-#   - JWT_SECRET (at least 32 characters)
-#   - CSRF_SECRET (at least 32 characters)
+npm ci
+Copy-Item .env.example .env
 ```
 
-**2. Frontend Setup:**
+Open `server/.env` and set the required values:
 
-```bash
-cd client
-npm install
-# No .env needed - uses relative URLs with Vite proxy
+```dotenv
+NODE_ENV=development
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>/<database>?retryWrites=true&w=majority
+JWT_SECRET=<random-secret-at-least-32-characters>
+JWT_EXPIRES_IN=7d
+CLIENT_ORIGIN=http://localhost:5173
+CSRF_SECRET=<different-random-secret-at-least-32-characters>
 ```
 
-### Running Applications
+Replace every placeholder. Use distinct, randomly generated values for `JWT_SECRET` and `CSRF_SECRET`; both must be at least 32 characters long. URL-encode special characters in the MongoDB username or password when required by the connection string. Do not commit `server/.env` or share production credentials.
 
-**Start both applications in separate terminals:**
+Start the backend:
 
-```bash
-# Terminal 1: Backend (must start first)
-cd server
+```powershell
 npm run dev
-# Runs on http://localhost:5000
+```
 
-# Terminal 2: Frontend
+The API listens on `http://localhost:5000` by default. Keep this terminal running.
+
+### 2. Configure and start the frontend
+
+Open a second terminal from the repository root:
+
+```powershell
 cd client
+npm ci
 npm run dev
-# Runs on http://localhost:5173
 ```
 
-**The frontend proxies API requests to the backend automatically.**
+Open `http://localhost:5173` in your browser. During development, Vite proxies `/api`, `/health`, and WebSocket traffic to the backend on port `5000`. The optional `VITE_API_URL` setting in `client/.env.example` can be used to override the API base URL if needed.
 
-### Verify Setup
+### 3. Confirm the backend is reachable
 
-Visit `http://localhost:5173` in your browser. You should see the DealRoom landing page.
+Open `http://localhost:5000/health`, or run:
 
-Test the integration:
-```javascript
-// In browser console at http://localhost:5173
-fetch('/health').then(r => r.json()).then(console.log)
-// Should return: {success: true, data: {status: 'ok', timestamp: '...'}}
+```powershell
+curl.exe -i http://localhost:5000/health
 ```
 
-## Available Commands
+A successful response returns JSON with `success: true` and `data.status: "ok"`. This confirms the health endpoint responds; authenticated and database-backed flows should also be verified in the application.
+
+## Useful commands
+
+Run each command from its application directory.
 
 ### Backend (`server/`)
 
 ```bash
-npm run dev      # Start development server with hot reload
-npm run build    # Compile TypeScript to JavaScript
-npm run start    # Run compiled production build
-npm run lint     # Run TypeScript type checks
+npm run dev              # Development server with reload
+npm run build            # Compile TypeScript
+npm run start            # Start compiled server (run build first)
+npm run lint             # TypeScript check without emitting files
+npm test                 # Unit tests; no database required
 ```
+
+The optional integration suite uses a real MongoDB database and WebSocket connections. It must only be run against a dedicated test database whose database name contains `test`—never against development or production data:
+
+```powershell
+$env:TEST_MONGODB_URI = "mongodb+srv://<user>:<encoded-password>@<cluster>/<dealroom_test>?retryWrites=true&w=majority"
+npm run test:integration
+Remove-Item Env:TEST_MONGODB_URI
+```
+
+The integration suite creates test records and removes the records it created; it does not drop the database. The MongoDB deployment must support transactions.
 
 ### Frontend (`client/`)
 
 ```bash
-npm run dev      # Start Vite dev server with hot reload
-npm run build    # Build for production
-npm run lint     # Run ESLint checks
-npm run preview  # Preview production build
+npm run dev              # Vite development server
+npm run build            # Type-check and create production assets
+npm run lint             # ESLint
+npm run preview          # Preview the production build locally
 ```
 
-## Environment Variables
+## Initial administrator (optional)
 
-### Backend (`server/.env`)
+Public registration intentionally permits only founder and investor roles. To create the first administrator for a local environment, configure the backend `.env`, then set the bootstrap values in your shell and run the command once from `server/`:
 
-**Required:**
-- `MONGODB_URI` - MongoDB Atlas connection string
-- `JWT_SECRET` - JWT signing secret (minimum 32 characters)
-- `CSRF_SECRET` - CSRF token secret (minimum 32 characters)
+```powershell
+$env:ADMIN_BOOTSTRAP_NAME = "DealRoom Admin"
+$env:ADMIN_BOOTSTRAP_EMAIL = "admin@example.com"
+$env:ADMIN_BOOTSTRAP_PASSWORD = "<unique-password-16-to-128-characters>"
+npm run bootstrap:admin
+Remove-Item Env:ADMIN_BOOTSTRAP_NAME
+Remove-Item Env:ADMIN_BOOTSTRAP_EMAIL
+Remove-Item Env:ADMIN_BOOTSTRAP_PASSWORD
+```
 
-**Optional:**
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment mode (default: development)
-- `CLIENT_ORIGIN` - CORS origin (default: http://localhost:5173)
-- `JWT_EXPIRES_IN` - JWT expiration (default: 7d)
+Use a dedicated administrator password and keep it out of tracked files, screenshots, and shared logs. The bootstrap command refuses to create another administrator or reuse an existing email. Do not run bootstrap against a shared or production database unless you intend to create the administrator there.
 
-### Frontend (`client/`)
+## AI Development Experience
 
-No environment variables required for development. The Vite proxy forwards API requests to `http://localhost:5000`.
+**Selected assessment tool: Kiro.** Kiro was used during the early project foundation and authentication work. Project steering files were used to keep the product scope, stack constraints, and implementation conventions explicit while changes were made.
 
-## Documentation
+Specific tasks where Kiro assisted:
 
-- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Complete ten-phase roadmap
-- [Architecture](docs/ARCHITECTURE.md) - Detailed architecture documentation
+1. **Project foundation:** establishing the separate React/Vite frontend and Express/TypeScript backend, initial routing, environment configuration, database connection setup, and health endpoint.
+2. **Authentication implementation:** developing the user model and registration, login, current-user, and logout flows.
+3. **Security and validation:** working through password hashing, HTTP-only cookie sessions, role checks, request validation, and CSRF protection.
+4. **Authentication UI integration:** connecting registration/login forms and protected frontend routes to the backend session flow.
+5. **Debugging and validation:** investigating implementation errors and exercising cases such as duplicate registration, invalid credentials, rejected role assignment, and missing or invalid CSRF tokens.
 
-## Features (Planned)
+AI-generated changes were reviewed against the code and observed behavior rather than accepted automatically. I used local builds, lint checks, test cases, and manual browser flows to find and correct issues. Later feature development and remediation also used ChatGPT, so Kiro was an important tool in the project but was not the only AI assistant used throughout every phase.
 
-DealRoom will include:
-- Authentication and role-based authorization (Founder, Investor, Admin)
-- Startup onboarding and profile management
-- Investor profile and preferences
-- Startup discovery with search and filtering
-- Connection requests and Deal Room creation
-- Private Deal Room collaboration
-- Structured investor evaluations
-- Information requests and responses
-- Persistent messaging with live WebSocket delivery
-- Activity timelines and in-app notifications
-- Admin moderation dashboard
+## Security notes
 
-## Current Limitations
+- Keep all secrets in local environment variables or a secret manager; never commit `.env` files.
+- Use HTTPS in production so secure cookies and session credentials are protected in transit.
+- Configure `CLIENT_ORIGIN` to the exact deployed frontend origin and restrict database network access.
+- Do not expose private investor notes, evaluations, session tokens, or database credentials in logs or API responses.
+- The API applies authentication, role/resource authorization, request validation, CSRF checks for state-changing requests, security headers, and rate limiting. These controls should be verified as part of deployment checks.
 
-Phase 1 provides the foundation. Business features will be implemented in Phases 2-10:
-- ⏳ Authentication (Phase 2)
-- ⏳ User profiles and onboarding (Phase 3)
-- ⏳ Startup discovery (Phase 4)
-- ⏳ Deal Rooms and collaboration (Phases 5-6)
-- ⏳ Real-time messaging (Phase 7)
-- ⏳ Activity and notifications (Phase 8)
-- ⏳ UI/UX polish (Phase 9)
-- ⏳ Production deployment (Phase 10)
+## Deployment
 
-## License
+- **Live application:** <!-- Add deployed frontend URL -->
+- **Backend API:** <!-- Add deployed API URL -->
+- **Health check:** <!-- Add deployed /health URL -->
 
-ISC
+## Current scope and limitations
 
----
-
-_Complete feature documentation and deployment instructions will be added in Phase 10._
+DealRoom implements the core founder/investor workflow through discovery, connection requests, due diligence, messaging, notifications, activity, and basic administration. This repository does not implement investment transactions, payment processing, cap tables, or investment recommendations.
