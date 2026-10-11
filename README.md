@@ -217,9 +217,9 @@ AI-generated changes were reviewed against the code and observed behavior rather
 
 ## Deployment
 
-- **Live application:** <!-- Add deployed frontend URL -->
-- **Backend API:** <!-- Add deployed API URL -->
-- **Health check:** <!-- Add deployed /health URL -->
+- **Live application:** <!-- Add deployed frontend URL -->https://dealroom-rr7h.onrender.com
+- **Backend API:** <!-- Add deployed API URL -->https://dealroom-rr7h.onrender.com/api
+- **Health check:** <!-- Add deployed /health URL -->https://dealroom-rr7h.onrender.com/health
 
 ## Current scope and limitations
 
