@@ -53,7 +53,6 @@ export function WorkspacePage() {
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{user?.role === 'admin' ? 'Administration' : 'Workspace'}</h1>
             <p className="mt-2 text-sm text-slate-600">{user?.role === 'admin' ? 'Manage accounts and startup visibility.' : isFounder ? 'Your startup, investor requests, and active deals.' : 'Your startup shortlist, conversations, and deal reviews.'}</p>
           </div>
-          {user?.role !== 'admin' && <Link to="/onboarding?edit=1" className="dr-quiet-button self-start"><PencilLine size={15} aria-hidden="true" /> Edit profile</Link>}
         </div>
 
         {user?.role === 'admin' ? (
@@ -78,7 +77,7 @@ export function WorkspacePage() {
                     </> : investorProfile?.sectors.slice(0, 5).map(sector => <span key={sector}>{sector}</span>)}
                   </div>
                 </div>
-                <Link to="/onboarding?edit=1" className="dr-quiet-button shrink-0"><PencilLine size={15} aria-hidden="true" /> Edit details</Link>
+                <Link to="/onboarding?edit=1" className="dr-quiet-button shrink-0"><PencilLine size={15} aria-hidden="true" /> Edit profile</Link>
               </div>
               {isFounder && startupProfile?.moderationStatus === 'hidden' && <div className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"><p className="font-semibold">Not visible in discovery</p><p className="mt-1">{startupProfile.moderationReason || 'An administrator has hidden this listing.'}</p></div>}
               {profileCompletion < 100 && <div className="mt-6 border-t border-slate-200 pt-5">

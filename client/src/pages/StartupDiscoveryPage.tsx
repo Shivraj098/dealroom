@@ -1,7 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  ArrowRight, Bookmark, BookmarkCheck, Building2, CircleDollarSign,
+  ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, Building2, CircleDollarSign,
   LoaderCircle, MapPin, Search, SlidersHorizontal, Users, X,
 } from 'lucide-react'
 import { useCurrentUser } from '@/features/auth/api'

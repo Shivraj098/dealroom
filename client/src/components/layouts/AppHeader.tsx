@@ -3,13 +3,17 @@ import { ArrowUpRight, Building2, Compass, Home, LogIn, LogOut, LoaderCircle } f
 import { useCurrentUser, useLogout } from '@/features/auth/api'
 import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 import { ThemeToggle } from '@/components/theme/ThemeProvider'
+import { ApiRequestError } from '@/lib/api-client'
 
 function navClass(active: boolean) {
   return `dr-nav-link ${active ? 'dr-nav-link-active' : ''}`
 }
 
 export function AppHeader({ showNotifications = true }: { showNotifications?: boolean }) {
-  const { data: user, isLoading } = useCurrentUser()
+  const userQuery = useCurrentUser()
+  const { data: user, isLoading, isError, error, refetch } = userQuery
+  const isUnauthorized = error instanceof ApiRequestError && error.status === 401
+  const sessionUnknown = !user && isError && !isUnauthorized
   const logoutMutation = useLogout()
   const location = useLocation()
   const navigate = useNavigate()
@@ -63,13 +67,18 @@ export function AppHeader({ showNotifications = true }: { showNotifications?: bo
                 <span className="hidden sm:inline">{logoutMutation.isPending ? 'Signing out…' : 'Sign out'}</span>
               </button>
             </>
+          ) : sessionUnknown ? (
+            <>
+              <ThemeToggle compact />
+              <span className="hidden text-xs text-amber-800 sm:inline" role="status">Session check failed</span>
+              <button type="button" onClick={() => void refetch()} className="dr-quiet-button"><LoaderCircle size={14} /> Retry</button>
+              <button type="button" onClick={() => void handleSignOut()} disabled={logoutMutation.isPending} className="dr-signout-button">{logoutMutation.isPending ? <LoaderCircle size={15} className="animate-spin" /> : <LogOut size={15} />}<span>Sign out</span></button>
+            </>
           ) : (
             <>
               <ThemeToggle compact />
-              {!isLoading && <>
-                <Link to="/login" className="dr-quiet-button"><LogIn size={15} aria-hidden="true" /> Sign in</Link>
-                <Link to="/register" className="dr-primary-button"><span>Create account</span><ArrowUpRight size={15} aria-hidden="true" /></Link>
-              </>}
+              <Link to="/login" className="dr-quiet-button"><LogIn size={15} aria-hidden="true" /> Sign in</Link>
+              <Link to="/register" className="dr-primary-button"><span>Create account</span><ArrowUpRight size={15} aria-hidden="true" /></Link>
             </>
           )}
         </div>

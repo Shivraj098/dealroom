@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, CheckCircle2, ClipboardList, MessagesSquare } from 'lucide-react'
 import { useCurrentUser } from '@/features/auth/api'
 import { AppHeader } from '@/components/layouts/AppHeader'
+import { ApiRequestError } from '@/lib/api-client'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 
 const steps = [
   { number: '01', title: 'Introduction', description: 'Review a profile, save a prospect, or request a connection.', icon: ClipboardList },
@@ -10,7 +12,10 @@ const steps = [
 ]
 
 export function HomePage() {
-  const { data: user, isLoading } = useCurrentUser()
+  const userQuery = useCurrentUser()
+  const { data: user, isLoading, isError, error, refetch } = userQuery
+  const isUnauthorized = error instanceof ApiRequestError && error.status === 401
+  const sessionUnknown = !user && isError && !isUnauthorized
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] text-slate-900">
@@ -30,6 +35,11 @@ export function HomePage() {
                 <Link to="/workspace" className="dr-primary-button min-h-11 px-5">Open workspace <ArrowUpRight size={16} aria-hidden="true" /></Link>
               ) : isLoading ? (
                 <span role="status" className="text-sm text-slate-500">Checking session…</span>
+              ) : sessionUnknown ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span role="alert" className="inline-flex items-center gap-2 text-sm text-amber-800"><AlertTriangle size={15} /> Couldn't check your session.</span>
+                  <button type="button" onClick={() => void refetch()} className="dr-quiet-button"><RefreshCw size={14} /> Retry</button>
+                </div>
               ) : (
                 <>
                   <Link to="/register" className="dr-primary-button min-h-11 px-5">Create account <ArrowRight size={16} aria-hidden="true" /></Link>

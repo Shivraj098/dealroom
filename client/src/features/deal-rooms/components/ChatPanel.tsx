@@ -212,8 +212,8 @@ export function ChatPanel({ roomId, role, readOnly }: { roomId: string; role: Ro
         {messages.map(message => {
           const mine = message.senderId === currentUserQuery.data?.id
           return <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${mine ? 'rounded-br-md bg-slate-950 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900'}`}>
-              <div className={`mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] ${mine ? 'text-slate-300' : 'text-slate-500'}`}><span className={`font-semibold ${mine ? 'text-white' : 'text-slate-800'}`}>{mine ? 'You' : message.senderName}</span><span className="capitalize">{message.senderRole}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div>
+            <div className={`dr-chat-bubble max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${mine ? 'dr-chat-bubble-mine rounded-br-md' : 'dr-chat-bubble-other rounded-bl-md'}`}>
+              <div className="dr-chat-meta mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]"><span className="dr-chat-author font-semibold">{mine ? 'You' : message.senderName}</span><span className="capitalize">{message.senderRole}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></div>
               <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.content}</p>
             </div>
           </div>

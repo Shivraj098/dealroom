@@ -9,8 +9,9 @@ export function useMyActivity() {
   return useQuery({
     queryKey: ACTIVITY_QUERY_KEY,
     queryFn: () => apiRequest<ActivityList>('/api/activity'),
-    refetchInterval: 30_000,
-    staleTime: 10_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    staleTime: 30_000,
   })
 }
 

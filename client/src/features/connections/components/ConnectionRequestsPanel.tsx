@@ -29,7 +29,7 @@ function RequestCard({ item, role, isResponding, onRespond }: {
     : [item.startup.industry, item.startup.stage.replaceAll('-', ' '), item.startup.headquarters].filter(Boolean).join(' · ')
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+    <article className="dr-hover-card rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Building2, BriefcaseBusiness, LoaderCircle, LockKeyhole, Mail, UserRound } from 'lucide-react'
+import { ArrowRight, Building2, BriefcaseBusiness, Check, LoaderCircle, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import { useRegister } from '../api'
 import { registerSchema, type RegisterFormData } from '../schemas'
 
@@ -12,6 +12,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -28,6 +29,7 @@ export function RegisterForm() {
   })
 
   const busy = isSubmitting || registerMutation.isPending
+  const selectedRole = watch('role')
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
@@ -56,11 +58,25 @@ export function RegisterForm() {
         <div className="grid grid-cols-2 gap-3">
           <label className="cursor-pointer">
             <input type="radio" value="founder" {...register('role')} className="peer sr-only" disabled={busy} />
-            <span className="flex min-h-24 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/70 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 transition peer-checked:bg-indigo-100"><Building2 size={16} /></span><span className="text-sm font-semibold text-slate-900">Founder</span><span className="text-xs leading-4 text-slate-500">Share your startup</span></span>
+            <span className={`dr-role-option ${selectedRole === 'founder' ? 'dr-role-option-selected' : ''}`}>
+              <span className="flex items-center justify-between gap-2">
+                <span className="dr-role-option-icon"><Building2 size={16} /></span>
+                {selectedRole === 'founder' && <Check size={17} className="dr-role-option-check" aria-hidden="true" />}
+              </span>
+              <span className="text-sm font-semibold">Founder</span>
+              <span className="text-xs leading-4 text-slate-500">Share your startup</span>
+            </span>
           </label>
           <label className="cursor-pointer">
             <input type="radio" value="investor" {...register('role')} className="peer sr-only" disabled={busy} />
-            <span className="flex min-h-24 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/70 peer-focus-visible:ring-4 peer-focus-visible:ring-indigo-500/20"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700"><BriefcaseBusiness size={16} /></span><span className="text-sm font-semibold text-slate-900">Investor</span><span className="text-xs leading-4 text-slate-500">Explore opportunities</span></span>
+            <span className={`dr-role-option ${selectedRole === 'investor' ? 'dr-role-option-selected' : ''}`}>
+              <span className="flex items-center justify-between gap-2">
+                <span className="dr-role-option-icon"><BriefcaseBusiness size={16} /></span>
+                {selectedRole === 'investor' && <Check size={17} className="dr-role-option-check" aria-hidden="true" />}
+              </span>
+              <span className="text-sm font-semibold">Investor</span>
+              <span className="text-xs leading-4 text-slate-500">Explore opportunities</span>
+            </span>
           </label>
         </div>
         {errors.role && <p className="mt-1.5 text-xs text-rose-600">{errors.role.message}</p>}

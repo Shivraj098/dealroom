@@ -6,17 +6,17 @@ import type { AdminStartupList, AdminUserList } from './types'
 export const ADMIN_USERS_QUERY_KEY = ['admin', 'users'] as const
 export const ADMIN_STARTUPS_QUERY_KEY = ['admin', 'startups'] as const
 
-export function useAdminUsers(search: string, status: string) {
+export function useAdminUsers(search: string, status: string, page: number) {
   return useQuery({
-    queryKey: [...ADMIN_USERS_QUERY_KEY, search, status],
-    queryFn: () => apiRequest<AdminUserList>(`/api/admin/users?search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}&page=1&limit=30`),
+    queryKey: [...ADMIN_USERS_QUERY_KEY, search, status, page],
+    queryFn: () => apiRequest<AdminUserList>(`/api/admin/users?search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}&page=${page}&limit=20`),
   })
 }
 
-export function useAdminStartups(search: string, visibility: string) {
+export function useAdminStartups(search: string, visibility: string, page: number) {
   return useQuery({
-    queryKey: [...ADMIN_STARTUPS_QUERY_KEY, search, visibility],
-    queryFn: () => apiRequest<AdminStartupList>(`/api/admin/startups?search=${encodeURIComponent(search)}&visibility=${encodeURIComponent(visibility)}&page=1&limit=30`),
+    queryKey: [...ADMIN_STARTUPS_QUERY_KEY, search, visibility, page],
+    queryFn: () => apiRequest<AdminStartupList>(`/api/admin/startups?search=${encodeURIComponent(search)}&visibility=${encodeURIComponent(visibility)}&page=${page}&limit=20`),
   })
 }
 

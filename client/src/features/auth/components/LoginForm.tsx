@@ -9,6 +9,10 @@ export function LoginForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const loginMutation = useLogin()
+  const requestedDestination = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
+  const returnTo = requestedDestination?.pathname?.startsWith('/') && !requestedDestination.pathname.startsWith('//')
+    ? `${requestedDestination.pathname}${requestedDestination.search ?? ''}${requestedDestination.hash ?? ''}`
+    : '/workspace'
 
   const {
     register,
@@ -21,9 +25,9 @@ export function LoginForm() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await loginMutation.mutateAsync(data)
-      // The workspace routes incomplete accounts to onboarding and keeps
-      // completed accounts in their normal workspace.
-      navigate('/workspace', { replace: true })
+      // Return to the protected destination when one was saved by the route guard.
+      // The app-level auth guard will still route incomplete profiles to onboarding.
+      navigate(returnTo, { replace: true })
     } catch {
       // Error is displayed below the form heading.
     }

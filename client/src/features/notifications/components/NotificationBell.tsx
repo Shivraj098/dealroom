@@ -6,7 +6,7 @@ import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications,
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const listQuery = useNotifications()
+  const listQuery = useNotifications(open)
   const countQuery = useUnreadNotificationCount()
   const markRead = useMarkNotificationRead()
   const markAllRead = useMarkAllNotificationsRead()

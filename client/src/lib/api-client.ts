@@ -4,9 +4,12 @@ const API_BASE = import.meta.env.VITE_API_URL || ''
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
 export class ApiRequestError extends Error {
-  constructor(message: string, public readonly status: number) {
+  readonly status: number
+
+  constructor(message: string, status: number) {
     super(message)
     this.name = 'ApiRequestError'
+    this.status = status
   }
 }
 

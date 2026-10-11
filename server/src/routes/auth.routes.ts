@@ -16,8 +16,9 @@ router.post('/register', csrfProtection, validateBody(registerSchema), authContr
 // POST /api/auth/login — CSRF protected, body validated
 router.post('/login', csrfProtection, validateBody(loginSchema), authController.login)
 
-// POST /api/auth/logout — CSRF protected, authentication required
-router.post('/logout', authenticate, csrfProtection, authController.logout)
+// POST /api/auth/logout — CSRF protected but deliberately not authenticated:
+// an expired or suspended session must still be able to clear its own cookies.
+router.post('/logout', csrfProtection, authController.logout)
 
 // GET /api/auth/me — authentication required
 router.get('/me', authenticate, authController.getCurrentUser)
