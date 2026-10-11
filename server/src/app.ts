@@ -1,4 +1,5 @@
 import express from 'express'
+import path from 'node:path'
 import helmet from 'helmet'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
@@ -48,6 +49,27 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', apiRoutes)
+
+// In production, serve the Vite build from the same origin as the API.
+// This keeps HTTP-only auth cookies and WebSocket origin checks on one site.
+if (config.nodeEnv === 'production') {
+  const clientDistPath = path.resolve(__dirname, '../../client/dist')
+
+  // Vite assets are served directly; index.html is handled by the SPA fallback below.
+  app.use(express.static(clientDistPath, { index: false }))
+
+  // Let React Router handle browser navigation to client-side routes, but never
+  // turn an unknown API request into index.html.
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next()
+    if (req.path === '/api' || req.path.startsWith('/api/')) return next()
+    if (!req.accepts('html')) return next()
+
+    res.sendFile(path.join(clientDistPath, 'index.html'), (error) => {
+      if (error) next(error)
+    })
+  })
+}
 
 // 404 handler for unmatched /api/* requests and other routes
 app.use((req, res) => {
