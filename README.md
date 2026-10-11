@@ -205,7 +205,7 @@ Specific tasks where Kiro assisted:
 4. **Authentication UI integration:** connecting registration/login forms and protected frontend routes to the backend session flow.
 5. **Debugging and validation:** investigating implementation errors and exercising cases such as duplicate registration, invalid credentials, rejected role assignment, and missing or invalid CSRF tokens.
 
-AI-generated changes were reviewed against the code and observed behavior rather than accepted automatically. I used local builds, lint checks, test cases, and manual browser flows to find and correct issues. Later feature development and remediation also used ChatGPT, so Kiro was an important tool in the project but was not the only AI assistant used throughout every phase.
+AI-generated changes were reviewed against the code and observed behavior rather than accepted automatically. I used local builds, lint checks, test cases, and manual browser flows to find and correct issues.
 
 ## Security notes
 
